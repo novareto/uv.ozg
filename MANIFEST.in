@@ -1,0 +1,7 @@
+include docs/HISTORY.rst
+include README.rst
+
+recursive-include tests *
+
+recursive-include docs *
+
