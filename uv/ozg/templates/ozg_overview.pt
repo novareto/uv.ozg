@@ -1,2 +1,8 @@
 <h1> OZG Dokumente </h1>
 <p class="lead"> Hier haben Sie die Möglichkeit nich anlassbezogene Dokumente er erstellen </p>
+
+<ul>
+  <li tal:repeat="doc docs">
+    <span tal:content="doc"> </span>
+  </li>
+</ul>
