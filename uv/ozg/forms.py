@@ -1,13 +1,17 @@
 from horseman.http import HTTPError
 from datetime import datetime
 from uuid import uuid4
-from uvcreha.events import UserLoggedInEvent
-from uvcreha.app import browser, events
+from reha.prototypes.events import UserLoggedInEvent
+from uvcreha import events
+from uvcreha.browser import routes
 from reiter.form import trigger
-from uvcreha import jsonschema, contenttypes
-from uvcreha.workflow import file_workflow, document_workflow
+from uvcreha import contents
+from reha.prototypes.workflows.file import file_workflow
+from reha.prototypes.workflows.document import document_workflow
 from uvcreha.browser.document import DefaultDocumentEditForm, DocumentEdit
 from jsonschema_wtforms import schema_fields
+from uvcreha.browser.form import JSONForm
+from .app import ozg_store 
 
 
 OZG = "ozg"
@@ -35,25 +39,33 @@ def create_ozg(event):
 
 class OZGDefaultDocumentEditForm(DefaultDocumentEditForm):
 
+    def setupForm(self, formdata=None):
+
+        ct, version = self.content_type.split('.', 1)
+        schema = ozg_store.get(ct, version) # , version)
+        form = JSONForm.from_schema(schema.value)
+        form.process(data={}, formdata=formdata)
+        return form
+
+
     def get_fields(self):
         name, version = self.content_type.rsplit(".", 1)
-        schema = jsonschema.documents_store.get(name, version)
+        schema = ozg_store.get(name, version)
         return schema_fields(schema.value)
 
     @trigger("Speichern", css="btn btn-primary", order=10)
     def save(self, data):
         form = self.setupForm(formdata=data.form)
-        import pdb; pdb.set_trace()
         if not form.validate():
             return {"form": form}
-      
-        content_type = contenttypes.registry['document']
-        crud = content_type.get_crud(self.request.app)
+
+        ct, crud = self.request.get_crud('document')
+        import pdb; pdb.set_trace()
         docdata = {
             "docid": str(uuid4()),
             "az": OZG,
             "uid": self.request.user.id,
-            "creation_date": datetime.now(),
+        #    "creation_date": datetime.now(),
             "state": document_workflow.states.sent.name,
             "content_type": self.request.route.params["content_type"],
             "item": form.data
@@ -62,7 +74,7 @@ class OZGDefaultDocumentEditForm(DefaultDocumentEditForm):
         return self.redirect("/")
 
 
-@browser.register(
+@routes.register(
     '/ozg/{content_type}', methods=['GET', 'POST'], name='ozg.edit')
 def ozg_edit_dispatch(request, **params):
     form = DocumentEdit.get(
