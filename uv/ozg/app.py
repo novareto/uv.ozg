@@ -3,10 +3,12 @@
 import pathlib
 import orjson
 import logging
-from fanstatic import Resource, Library
-from uvcreha.browser import Page, routes
-from uv.ozg import TEMPLATES
 import reiter.versioning.store
+
+from dataclasses import dataclass
+from fanstatic import Library
+from uv.ozg import TEMPLATES
+from uvcreha.browser import Page, routes
 
 
 library = Library('uv.ozg', 'static')
@@ -26,17 +28,26 @@ def load_content_types(path: pathlib.Path):
                 logging.info(f'loading {key} : {str(f.absolute())}.')
 
 
+@dataclass
+class OZGDoc:
+    key: str
+    identifier: str
+    title: str
+
+    @property
+    def ns(self):
+        return f'{self.key}.{self.identifier}'
+
+
 def ozg_docs():
     alts = []
     for key, versions in ozg_store.items():
         if versions:
             latest = versions.get()
-            alts.append((
-                f'{key}.{latest.identifier}',
-                latest.value.get('title', key)
-            ))
+            alts.append(
+                OZGDoc(key, latest.identifier, latest.value.get('title', key))
+            )
     return alts
-
 
 
 @routes.register("/ozg")

@@ -11,7 +11,7 @@ from reha.prototypes.workflows.document import document_workflow
 from uvcreha.browser.document import DefaultDocumentEditForm, DocumentEdit
 from jsonschema_wtforms import schema_fields
 from uvcreha.browser.form import JSONForm
-from .app import ozg_store 
+from .app import ozg_store
 
 
 OZG = "ozg"
@@ -19,34 +19,35 @@ OZG = "ozg"
 
 @events.subscribe(UserLoggedInEvent)
 def create_ozg(event):
-    content_type = contenttypes.registry['file']
+    ct, crud = event.request.get_crud("file")
     filedata = {
-        "uid": event.user.id,
+        "uid": event.user.uid,
         "az": OZG,
         "mnr": "mnr",
         "vid": "vid",
         "state": file_workflow.states.validated.name,
     }
-    crud = content_type.get_crud(event.request.app)
     try:
-        crud.create(filedata, event.request)
+        crud.create(filedata)
     except HTTPError as exc:
         if int(exc.status) != 409:
             # Already exist
             raise
 
 
-
 class OZGDefaultDocumentEditForm(DefaultDocumentEditForm):
 
-    def setupForm(self, formdata=None):
+    @property
+    def title(self):
+        ct, version = self.content_type.split(".", 1)
+        return ct 
 
-        ct, version = self.content_type.split('.', 1)
-        schema = ozg_store.get(ct, version) # , version)
+    def setupForm(self, formdata=None):
+        ct, version = self.content_type.split(".", 1)
+        schema = ozg_store.get(ct, version)  # , version)
         form = JSONForm.from_schema(schema.value)
         form.process(data={}, formdata=formdata)
         return form
-
 
     def get_fields(self):
         name, version = self.content_type.rsplit(".", 1)
@@ -59,27 +60,21 @@ class OZGDefaultDocumentEditForm(DefaultDocumentEditForm):
         if not form.validate():
             return {"form": form}
 
-        ct, crud = self.request.get_crud('document')
-        import pdb; pdb.set_trace()
+        ct, crud = self.request.get_crud("document")
         docdata = {
             "docid": str(uuid4()),
             "az": OZG,
-            "uid": self.request.user.id,
-        #    "creation_date": datetime.now(),
+            "uid": self.request.user.uid,
             "state": document_workflow.states.sent.name,
             "content_type": self.request.route.params["content_type"],
-            "item": form.data
+            "item": form.data,
         }
-        document = crud.create(docdata, self.request)
+        crud.create(docdata)
         return self.redirect("/")
 
 
-@routes.register(
-    '/ozg/{content_type}', methods=['GET', 'POST'], name='ozg.edit')
+@routes.register("/ozg/{content_type}", methods=["GET", "POST"], name="ozg.edit")
 def ozg_edit_dispatch(request, **params):
-    form = DocumentEdit.get(
-        params["content_type"],
-        OZGDefaultDocumentEditForm
-    )
+    form = DocumentEdit.get(params["content_type"], OZGDefaultDocumentEditForm)
     form.content_type = params["content_type"]
     return form(request, **params)()

@@ -1,8 +1,21 @@
 <h1> OZG Dokumente </h1>
-<p class="lead"> Hier haben Sie die Möglichkeit nich anlassbezogene Dokumente er erstellen </p>
+<p class="lead"> Hier haben Sie die Möglichkeit nicht anlassbezogene Dokumente er erstellen </p>
 
-<ul>
-  <li tal:repeat="doc docs">
-    <span tal:content="doc"> </span>
-  </li>
-</ul>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th> Dokumentart </th>
+      <th> Version </th>
+      <th> Aktion </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr tal:repeat="doc docs">
+      <td tal:content="doc.key"></td>
+      <td tal:content="doc.identifier"></td>
+      <td> <a href="/ozg" tal:attributes="href string:/ozg/${doc.ns}"> Dokument erstellen </a> </td>
+
+    </tr>
+  </tbody>
+</table>
