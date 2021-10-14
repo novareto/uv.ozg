@@ -20,19 +20,20 @@ OZG = "ozg"
 @events.subscribe(UserLoggedInEvent)
 def create_ozg(event):
     ct, crud = event.request.get_crud("file")
-    filedata = {
-        "uid": event.user.uid,
-        "az": OZG,
-        "mnr": "mnr",
-        "vid": "vid",
-        "state": file_workflow.states.validated.name,
-    }
-    try:
-        crud.create(filedata)
-    except HTTPError as exc:
-        if int(exc.status) != 409:
-            # Already exist
-            raise
+    if not crud.find_one(uid=event.user.uid, az="ozg"): 
+        filedata = {
+            "uid": event.user.uid,
+            "az": OZG,
+            "mnr": "mnr",
+            "vid": "vid",
+            "state": file_workflow.states.validated.name,
+        }
+        try:
+            crud.create(filedata)
+        except HTTPError as exc:
+            if int(exc.status) != 409:
+                # Already exist
+                raise
 
 
 class OZGDefaultDocumentEditForm(DefaultDocumentEditForm):
