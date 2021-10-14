@@ -1,11 +1,8 @@
-from horseman.http import HTTPError
-from datetime import datetime
 from uuid import uuid4
 from reha.prototypes.events import UserLoggedInEvent
 from uvcreha import events
 from uvcreha.browser import routes
 from reiter.form import trigger
-from uvcreha import contents
 from reha.prototypes.workflows.file import file_workflow
 from reha.prototypes.workflows.document import document_workflow
 from uvcreha.browser.document import DefaultDocumentEditForm, DocumentEdit
@@ -20,27 +17,24 @@ OZG = "ozg"
 @events.subscribe(UserLoggedInEvent)
 def create_ozg(event):
     ct, crud = event.request.get_crud("file")
-    filedata = {
-        "uid": event.user.uid,
-        "az": OZG,
-        "mnr": "mnr",
-        "vid": "vid",
-        "state": file_workflow.states.validated.name,
-    }
     try:
+        filedata = {
+            "uid": event.user.uid,
+            "az": OZG,
+            "mnr": "mnr",
+            "vid": "vid",
+            "state": file_workflow.states.validated.name,
+        }
         crud.create(filedata)
-    except HTTPError as exc:
-        if int(exc.status) != 409:
-            # Already exist
-            raise
+    except BaseException as exc:
+        pass
 
 
 class OZGDefaultDocumentEditForm(DefaultDocumentEditForm):
-
     @property
     def title(self):
         ct, version = self.content_type.split(".", 1)
-        return ct 
+        return ct
 
     def setupForm(self, formdata=None):
         ct, version = self.content_type.split(".", 1)
