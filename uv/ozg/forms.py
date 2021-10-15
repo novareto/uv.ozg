@@ -17,6 +17,8 @@ OZG = "ozg"
 @events.subscribe(UserLoggedInEvent)
 def create_ozg(event):
     ct, crud = event.request.get_crud("file")
+    if not hasattr(event.user, 'uid'):
+        return
     if not crud.find_one(uid=event.user.uid, az="ozg"): 
         filedata = {
             "uid": event.user.uid,

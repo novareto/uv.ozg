@@ -25,7 +25,6 @@ def load_content_types(path: pathlib.Path):
                 key = schema.get('id', f.name)
                 version = schema.pop('$version', None)
                 ozg_store.add(key, schema, version=version)
-                logging.info(f'loading {key} : {str(f.absolute())}.')
 
 
 @dataclass
