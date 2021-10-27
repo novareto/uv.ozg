@@ -1,14 +1,15 @@
-from uuid import uuid4
+from .app import ozg_store
+from horseman.http import HTTPError
+from jsonschema_wtforms import schema_fields
 from reha.prototypes.events import UserLoggedInEvent
+from reha.prototypes.workflows.document import document_workflow
+from reha.prototypes.workflows.file import file_workflow
+from reiter.form import trigger
+from uuid import uuid4
 from uvcreha import events
 from uvcreha.browser import routes
-from reiter.form import trigger
-from reha.prototypes.workflows.file import file_workflow
-from reha.prototypes.workflows.document import document_workflow
 from uvcreha.browser.document import DefaultDocumentEditForm, DocumentEdit
-from jsonschema_wtforms import schema_fields
 from uvcreha.browser.form import JSONForm
-from .app import ozg_store
 
 
 OZG = "ozg"
@@ -17,9 +18,9 @@ OZG = "ozg"
 @events.subscribe(UserLoggedInEvent)
 def create_ozg(event):
     ct, crud = event.request.get_crud("file")
-    if not hasattr(event.user, 'uid'):
+    if not hasattr(event.user, "uid"):
         return
-    if not crud.find_one(uid=event.user.uid, az="ozg"): 
+    if not crud.find_one(uid=event.user.uid, az="ozg"):
         filedata = {
             "uid": event.user.uid,
             "az": OZG,

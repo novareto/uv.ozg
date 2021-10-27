@@ -2,7 +2,6 @@
 
 import pathlib
 import orjson
-import logging
 import reiter.versioning.store
 
 from dataclasses import dataclass
@@ -50,7 +49,7 @@ def ozg_docs():
 
 
 @routes.register("/ozg")
-class TestView(Page):
+class OZGView(Page):
 
     template = TEMPLATES["ozg_overview.pt"]
 
