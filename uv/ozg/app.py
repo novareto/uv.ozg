@@ -10,7 +10,7 @@ from uv.ozg import TEMPLATES
 from uvcreha.browser import Page, routes
 
 
-library = Library('uv.ozg', 'static')
+library = Library("uv.ozg", "static")
 
 
 ozg_store = reiter.versioning.store.Store()
@@ -18,11 +18,11 @@ ozg_store = reiter.versioning.store.Store()
 
 def load_content_types(path: pathlib.Path):
     for f in path.iterdir():
-        if f.suffix == '.json':
-            with f.open('r') as fd:
+        if f.suffix == ".json":
+            with f.open("r") as fd:
                 schema = orjson.loads(fd.read())
-                key = schema.get('id', f.name)
-                version = schema.pop('$version', None)
+                key = schema.get("name", f.name)
+                version = schema.pop("$version", None)
                 ozg_store.add(key, schema, version=version)
 
 
@@ -31,10 +31,11 @@ class OZGDoc:
     key: str
     identifier: str
     title: str
+    description: str
 
     @property
     def ns(self):
-        return f'{self.key}.{self.identifier}'
+        return f"{self.key}.{self.identifier}"
 
 
 def ozg_docs():
@@ -43,7 +44,12 @@ def ozg_docs():
         if versions:
             latest = versions.get()
             alts.append(
-                OZGDoc(key, latest.identifier, latest.value.get('title', key))
+                OZGDoc(
+                    key,
+                    latest.identifier,
+                    latest.value.get("title", key),
+                    latest.value.get("description", ""),
+                )
             )
     return alts
 
